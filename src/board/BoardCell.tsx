@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Cell } from '../types/interfaces';
+import { EIcons } from '../types/enums';
 import classes from './BoardCell.module.css';
 
 interface Props {
@@ -22,7 +23,7 @@ export const BoardCell = ({
   const [isMine, setIsMine] = useState<boolean>(false);
   const [isFlagged, setIsFlagged] = useState<boolean>(false);
   const [isClicked, setIsClicked] = useState<boolean>(false);
-
+  const isExploded = isMine && isClicked;
   const onClick = () => {
     clickHandler(xCoord, yCoord);
   };
@@ -42,11 +43,11 @@ export const BoardCell = ({
   useEffect(() => {
     let cellValue;
     if (isFlagged) {
-      cellValue = 'flag-icon';
+      cellValue = EIcons.FLAG;
     } else if (isMine && isClicked) {
-      cellValue = 'explosion-icon';
-    }else if(isMine && 'isExposed'){
-      cellValue = 'mine-icon';
+      cellValue = EIcons.EXPLOSION;
+    } else if (isMine && isExploded) {
+      cellValue = EIcons.MINE;
     }
   }, [isClicked, isMine, isFlagged]);
 
