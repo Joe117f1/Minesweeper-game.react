@@ -6,7 +6,7 @@ enum eTexts {
   SCORE = 'Best score:',
 }
 
-export const GameLine = ({
+export const TimeDisplay = ({
   text,
   time,
 }: {
@@ -27,8 +27,8 @@ export const GameHeader = () => {
 
   return (
     <div className={classes.panel}>
-        <GameLine text={eTexts.TIME} time={time} />
-        <GameLine text={eTexts.SCORE} time={bestScore} />
+        <TimeDisplay text={eTexts.TIME} time={time} />
+        <TimeDisplay text={eTexts.SCORE} time={bestScore} />
     </div>
   );
 };
