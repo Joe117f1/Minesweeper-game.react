@@ -1,0 +1,11 @@
+
+.hint {
+  font-size: 25px;
+  background-color: transparent;
+  border: none;
+  outline: none;
+}
+
+.hint:hover {
+  background-color: transparent;
+}
