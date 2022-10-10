@@ -1,4 +1,4 @@
-export interface Cell {
+export interface ICell {
   xCoord: number;
   yCoord: number;
   isMine: boolean;

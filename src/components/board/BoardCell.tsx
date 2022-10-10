@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Cell } from '../../types/interfaces';
+import { ICell } from '../../types/interfaces';
 import { EIcons } from '../../types/enums';
 import classes from './BoardCell.module.css';
 
