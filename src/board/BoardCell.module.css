@@ -1,7 +1,0 @@
-.unClicked {
-  background-color: var(--cell-unclicked-color);
-}
-
-.clicked {
-  background-color: var(--cell-clicked-color);
-}
