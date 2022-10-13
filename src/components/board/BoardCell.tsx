@@ -1,62 +1,74 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useReducer } from 'react';
 import { ICell } from '../../types/interfaces';
 import { EIcons } from '../../types/enums';
 import classes from './BoardCell.module.css';
 
-interface Props {
-  xCoord: number;
-  yCoord: number;
-  isMineCell: boolean;
-  isFlaggedCell: boolean;
-  isClickedCell: boolean;
-  clickHandler: (x: number, y: number) => void;
+enum EActions {
+  MINE = 'mine',
+  FLAGGED = 'flagged',
+  CLICKED = 'clicked',
 }
+
+interface ICellState {
+  isMine: boolean;
+  isFlagged: boolean;
+  isClicked: boolean;
+}
+interface IProps extends ICell {
+  clickHandler: (cell: ICell) => void;
+}
+
+const reducer = (state: ICellState, action: { type: EActions }) => {
+  switch (action.type) {
+    case EActions.MINE:
+      return { ...state, isMine: true };
+    case EActions.FLAGGED:
+      return { ...state, isFlagged: true };
+    case EActions.CLICKED:
+      return { ...state, isClicked: true };
+    default:
+      return { ...state, isMine: false, isFlagged: false, isClicked: false }; //TODO: change to reset function
+  }
+};
 
 export const BoardCell = ({
   xCoord,
   yCoord,
-  isMineCell,
-  isFlaggedCell,
-  isClickedCell,
+  isMine,
+  isFlagged,
+  isClicked,
   clickHandler,
-}: Props) => {
-  const [isMine, setIsMine] = useState<boolean>(false);
-  const [isFlagged, setIsFlagged] = useState<boolean>(false);
-  const [isClicked, setIsClicked] = useState<boolean>(false);
-  const isExploded = isMine && isClicked;
+}: IProps) => {
+  const cellState = { isMine, isFlagged, isClicked };
+  const [cell, setCell] = useReducer(reducer, cellState);
+  const [cellValue, setCellValue] = useState<EIcons | null>(null);
+  const isExploded = cell.isMine && cell.isClicked;
+
   const onClick = () => {
-    clickHandler(xCoord, yCoord);
+    setCell({ type: EActions.CLICKED });
+    clickHandler({ ...cell, isClicked: true, xCoord, yCoord });
   };
 
   useEffect(() => {
-    setIsMine(isMineCell);
-  }, [isMineCell]);
+    let cellValue = null;
 
-  useEffect(() => {
-    setIsFlagged(isFlaggedCell);
-  }, [isFlaggedCell]);
-
-  useEffect(() => {
-    setIsClicked(isClickedCell);
-  }, [isClickedCell]);
-
-  useEffect(() => {
-    let cellValue;
     if (isFlagged) {
       cellValue = EIcons.FLAG;
-    } else if (isMine && isClicked) {
+    } else if (isExploded) {
       cellValue = EIcons.EXPLOSION;
     } else if (isMine && isExploded) {
+      //TODO: check logic-exposed?
       cellValue = EIcons.MINE;
     }
-  }, [isClicked, isMine, isFlagged]);
+    setCellValue(cellValue);
+  }, [cell]);
 
   return (
     <td
-      className={isClicked ? classes.clicked : classes.unClicked}
+      className={cell.isClicked ? classes.clicked : classes.unClicked}
       onClick={onClick}
     >
-      {}
+      {cellValue}
     </td>
   );
 };

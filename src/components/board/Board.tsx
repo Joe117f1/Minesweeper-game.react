@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { BoardCell } from './BoardCell';
-import { Cell } from '../../types/interfaces';
+import { ICell } from '../../types/interfaces';
+import { EIcons } from '../../types/enums';
 import classes from './Board.module.css';
 
-type Boardow = Cell[];
+type Boardow = ICell[];
 type Board = Boardow[];
 
 interface Props {
@@ -12,9 +13,10 @@ interface Props {
 
 export const Board = ({ boardSize }: Props) => {
   const [isGameActive, setIsGameActive] = useState(false);
+  const [isFirstClick, setIsFirstClick] = useState(true);
   const [gameBoard, setGameBoard] = useState<Board>([]);
 
-  const createCell = (x: number, y: number) => {
+  const createCell = (x: number, y: number): ICell => {
     return {
       xCoord: x,
       yCoord: y,
@@ -38,67 +40,86 @@ export const Board = ({ boardSize }: Props) => {
     return board;
   }, []);
 
-  const firstClickHandler = (cellElement:any, i: number, j: number) => {
-    const cell = gameBoard[i][j];
-    if (!isGameActive || gameBoard[i][j].isFlagged) {
-        throw new Error('Cannot click on flags OR while game is over');
+  const firstClickHandler = (cell: ICell) => {
+    // if (!isGameActive || gameBoard[i][j].isFlagged) {
+    if (!isGameActive || cell.isFlagged) {
+      // throw new Error('Cannot click on flags OR while game is over');
     }
 
-    if (!isGameActive) {
-        if (cell.isMine) {
-            // restart();
-            // cellClickedHandler(cellElement, i, j);
-            throw new Error('First click was a mine!')
-        }
+    if (isFirstClick) {
+      if (cell.isMine) {
+        // restart();
+        cellClickedHandler(cell);
+        throw new Error('First click was a mine!');
+      }
+      setIsFirstClick(false);
     }
-    return cell;
-};
-
-  const cellClickedHandler = (i: number, j: number) => {
-    console.log(i,j);
   };
-//   const cellClickedHandler = (cellElement:any, i: number, j: number) => {
-//     let cell;
-//     try {
-//         cell = firstClickHandler(i, j, cellElement);
-//     } catch (error:any) {
-//         console.log(error.message);
-//         return;
-//     }
-//     // startGame();
-//     // getSmiely(IN_GAME_EMOJI);
-//     // exposeCell(cell, i, j);
-//     // checkForWin(gBoard);
-// };
+
+  const cellClickedHandler = (cell: ICell) => {
+    try {
+      firstClickHandler(cell);
+      console.log('cellClickedHandler: ', cell);
+
+      // startGame();
+      // getSmiely(IN_GAME_EMOJI);
+      exposeCell(cell);
+      // checkForWin(gBoard);
+    } catch (error: any) {
+      console.log(error.message);
+      return;
+    }
+  };
+
+  const exposeCell = (cell: ICell) => {
+    if (cell.isMine) {
+      console.log('MINE! ',cell)
+      // updateLivesAndGameStatus(i, j);
+      // renderCell(i, j, EXPLODED)
+      return;
+    } else {
+      // workOnNeigborCells(i, j);
+    }
+  };
+
+  const renderCell = (cell: ICell, value:EIcons) => {
+    if (cell.isClicked) return;
+
+    if (value !== EIcons.FLAG && value !== null) {
+        cell.isClicked = true;
+        // removeAndAddClass(cellElement, 'unClicked', 'clicked');
+    }
+    // updateCellHtmlContent(cellElement, value);
+};
 
   useEffect(() => {
     setGameBoard(createBoard);
-  }, [gameBoard]);
+  }, [boardSize]);
 
   return (
     <div className={classes.board}>
-    <table>
-      <tbody>
-        {gameBoard.map((row, idx) => (
-          <tr key={`${idx}-${Math.random().toString()}`}>
-            {row.map((cell, idx) => {
-              const { xCoord: x, yCoord: y } = cell;
-              return (
-                <BoardCell
-                  key={`${idx}-${x}-${y}-${Math.random().toString()}`}
-                  xCoord={x}
-                  yCoord={y}
-                  isMineCell={cell.isMine}
-                  isFlaggedCell={cell.isFlagged}
-                  isClickedCell={cell.isClicked}
-                  clickHandler={cellClickedHandler}
-                />
-              );
-            })}
-          </tr>
-        ))}
-      </tbody>
-    </table>
+      <table>
+        <tbody>
+          {gameBoard.map((row, idx) => (
+            <tr key={`${idx}-${Math.random().toString()}`}>
+              {row.map((cell, idx) => {
+                const { xCoord: x, yCoord: y } = cell;
+                return (
+                  <BoardCell
+                    key={`${idx}-${x}-${y}`}
+                    xCoord={x}
+                    yCoord={y}
+                    isMine={cell.isMine}
+                    isFlagged={cell.isFlagged}
+                    isClicked={cell.isClicked}
+                    clickHandler={cellClickedHandler}
+                  />
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };
