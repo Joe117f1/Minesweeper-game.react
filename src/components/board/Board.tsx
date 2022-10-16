@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, memo } from 'react';
 import { BoardCell } from './BoardCell';
 import { ICell } from '../../types/interfaces';
 import { EIcons } from '../../types/enums';
@@ -7,24 +7,24 @@ import classes from './Board.module.css';
 type Boardow = ICell[];
 type Board = Boardow[];
 
-interface Props {
+interface IProps {
   boardSize: number;
 }
 
-export const Board = ({ boardSize }: Props) => {
+const createCell = (x: number, y: number): ICell => {
+  return {
+    xCoord: x,
+    yCoord: y,
+    isMine: false,
+    isFlagged: false,
+    isClicked: false,
+  };
+};
+
+export const Board = memo(({ boardSize }: IProps) => {
   const [isGameActive, setIsGameActive] = useState(false);
   const [isFirstClick, setIsFirstClick] = useState(true);
   const [gameBoard, setGameBoard] = useState<Board>([]);
-
-  const createCell = (x: number, y: number): ICell => {
-    return {
-      xCoord: x,
-      yCoord: y,
-      isMine: false,
-      isFlagged: false,
-      isClicked: false,
-    };
-  };
 
   const createBoard = useMemo(() => {
     const board: Board = [];
@@ -40,25 +40,12 @@ export const Board = ({ boardSize }: Props) => {
     return board;
   }, []);
 
-  const firstClickHandler = (cell: ICell) => {
-    // if (!isGameActive || gameBoard[i][j].isFlagged) {
-    if (!isGameActive || cell.isFlagged) {
-      // throw new Error('Cannot click on flags OR while game is over');
-    }
-
-    if (isFirstClick) {
-      if (cell.isMine) {
-        // restart();
-        cellClickedHandler(cell);
-        throw new Error('First click was a mine!');
-      }
-      setIsFirstClick(false);
-    }
-  };
-
   const cellClickedHandler = (cell: ICell) => {
     try {
-      firstClickHandler(cell);
+      const { xCoord, yCoord } = cell;
+      gameBoard[xCoord][yCoord].isClicked = true;
+
+      isFirstClick && firstClickHandler(cell);
       console.log('cellClickedHandler: ', cell);
 
       // startGame();
@@ -71,9 +58,27 @@ export const Board = ({ boardSize }: Props) => {
     }
   };
 
+  const firstClickHandler = (cell: ICell) => {
+    setIsGameActive(true);
+    // if (!isGameActive || gameBoard[i][j].isFlagged) {
+    if (cell.isFlagged) {
+      // throw new Error('Cannot click on flags OR while game is over');
+    }
+
+    if (isFirstClick) {
+      if (cell.isMine) {
+        console.log('cell.isMine: ', cell.isMine);
+        // restart();
+        // cellClickedHandler(cell); //infinite loop, need toreset the board
+        throw new Error('First click was a mine!');
+      }
+      setIsFirstClick(false);
+    }
+  };
+
   const exposeCell = (cell: ICell) => {
     if (cell.isMine) {
-      console.log('MINE! ',cell)
+      console.log('MINE! ', cell);
       // updateLivesAndGameStatus(i, j);
       // renderCell(i, j, EXPLODED)
       return;
@@ -82,20 +87,20 @@ export const Board = ({ boardSize }: Props) => {
     }
   };
 
-  const renderCell = (cell: ICell, value:EIcons) => {
+  const renderCell = (cell: ICell, value: EIcons) => {
     if (cell.isClicked) return;
 
     if (value !== EIcons.FLAG && value !== null) {
-        cell.isClicked = true;
-        // removeAndAddClass(cellElement, 'unClicked', 'clicked');
+      cell.isClicked = true;
+      // removeAndAddClass(cellElement, 'unClicked', 'clicked');
     }
     // updateCellHtmlContent(cellElement, value);
-};
+  };
 
   useEffect(() => {
     setGameBoard(createBoard);
   }, [boardSize]);
-
+  console.count('+ + +  board run + + +');
   return (
     <div className={classes.board}>
       <table>
@@ -122,4 +127,4 @@ export const Board = ({ boardSize }: Props) => {
       </table>
     </div>
   );
-};
+});
