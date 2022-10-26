@@ -1,10 +1,23 @@
-import { useState, useEffect, useMemo, memo } from 'react';
+import {
+  useState,
+  useEffect,
+  useMemo,
+  useReducer,
+  memo,
+  useRef,
+  ReactNode,
+} from 'react';
 import { BoardCell } from './BoardCell';
-import { ICell } from '../../types/interfaces';
+import { Cell, CellState, EActions } from '../../types/interfaces';
 import { EIcons } from '../../types/enums';
 import classes from './Board.module.css';
 
-type Boardow = ICell[];
+enum ECellsActions {
+  COUNT_MINES = 'count-mines',
+  REVEAL_NEIGHBORS = 'reveal-neighbors',
+}
+
+type Boardow = Cell[];
 type Board = Boardow[];
 
 interface IProps {
@@ -86,9 +99,6 @@ const createCell = (x: number, y: number): Cell => {
 };
 
 export const Board = memo(({ boardSize }: IProps) => {
-  const [isGameActive, setIsGameActive] = useState(false);
-  const [isFirstClick, setIsFirstClick] = useState(true);
-  const [gameBoard, setGameBoard] = useState<Board>([]);
 
   const createBoard = useMemo(() => {
     const board: Board = [];
@@ -114,15 +124,24 @@ export const Board = memo(({ boardSize }: IProps) => {
     }
     return board;
   }, [boardSize]);
+  const [isGameActive, setIsGameActive] = useState(false);
+  const [isFirstClick, setIsFirstClick] = useState(true);
+  // const [gameBoard, setGameBoard] = useReducer(boardReducer, createBoard);
+  const [gameBoard, setGameBoard] = useState<Board>(createBoard);
 
-  const cellClickedHandler = (cell: ICell) => {
+  const cellClickedHandler = (cell: Cell, v?: any) => {
     try {
       const { xCoord, yCoord } = cell;
       gameBoard[xCoord][yCoord].isClicked = true;
+      // v && (gameBoard[xCoord][yCoord].value = v);
 
       isFirstClick && firstClickHandler(cell);
       console.log('cellClickedHandler: ', cell);
-
+      if (v) {
+        console.log('+++ C L I C K  B Y  F U N C +++');
+        const id = `${cell.xCoord}-${cell.yCoord}`;
+        console.log('cell id: ', id);
+      }
       // startGame();
       // getSmiely(IN_GAME_EMOJI);
       exposeCell(cell);
@@ -133,7 +152,7 @@ export const Board = memo(({ boardSize }: IProps) => {
     }
   };
 
-  const firstClickHandler = (cell: ICell) => {
+  const firstClickHandler = (cell: Cell) => {
     setIsGameActive(true);
     // if (!isGameActive || gameBoard[i][j].isFlagged) {
     if (cell.isFlagged) {
@@ -151,30 +170,106 @@ export const Board = memo(({ boardSize }: IProps) => {
     }
   };
 
-  const exposeCell = (cell: ICell) => {
+  const exposeCell = (cell: Cell) => {
     if (cell.isMine) {
       console.log('MINE! ', cell);
       // updateLivesAndGameStatus(i, j);
       // renderCell(i, j, EXPLODED)
       return;
     } else {
-      // workOnNeigborCells(i, j);
+      workOnNeigborCells(cell);
     }
   };
 
-  const renderCell = (cell: ICell, value: EIcons) => {
-    if (cell.isClicked) return;
+  const workOnNeigborCells = (cell: Cell) => {
+    const { xCoord: i, yCoord: j, value } = cell;
+    // const neighborMines = neighborCellsActionsHandler(
+    //   i,
+    //   j,
+    //   gameBoard,
+    //   ECellsActions.COUNT_MINES
+    // );
+    if (value > 0) {
+      renderCell(cell, value);
+    } else {
+      renderCell(cell, null);
+      neighborCellsActionsHandler(
+        i,
+        j,
+        gameBoard,
+        ECellsActions.REVEAL_NEIGHBORS
+      );
+    }
+    // !neighborMines ? renderCell(cell, null) : renderCell(cell, neighborMines);
+    // if (!neighborMines) {
+    //   neighborCellsActionsHandler(
+    //     i,
+    //     j,
+    //     gameBoard,
+    //     ECellsActions.REVEAL_NEIGHBORS
+    //   );
+    // }
 
-    if (value !== EIcons.FLAG && value !== null) {
+    // if (neighborMine) gRecursiveLoop = 0;
+  };
+
+  const neighborCellsActionsHandler = (
+    xCoord: number,
+    yCoord: number,
+    board: Board,
+    request: ECellsActions
+  ) => {
+    const BOARD_LENGTH = board.length;
+    let minesCounter = 0;
+    for (let i = xCoord - 1; i <= xCoord + 1; i++) {
+      if (i < 0 || i >= BOARD_LENGTH) continue;
+      for (let j = yCoord - 1; j <= yCoord + 1; j++) {
+        if (i === xCoord && j === yCoord) continue;
+        // if (j < 0 || j >= board[i].length) continue;
+        if (j < 0 || j >= BOARD_LENGTH) continue;
+        const currCell = board[i][j];
+
+        if (currCell.isMine) minesCounter++;
+        if (currCell.isFlagged) continue;
+        if (currCell.isClicked) continue;
+        if (request === ECellsActions.REVEAL_NEIGHBORS) {
+          const val = currCell.value;
+          // const val = neighborCellsActionsHandler(
+          //   i,
+          //   j,
+          //   board,
+          //   ECellsActions.COUNT_MINES
+          // );
+          renderCell(currCell, val);
+          if (!val) {
+            cellClickedHandler(currCell, true);
+          }
+        }
+      }
+    }
+    if (request === ECellsActions.COUNT_MINES) {
+      return minesCounter;
+    }
+  };
+
+  // const renderCell = (cell: ICell, value: EIcons | null) => {
+  const renderCell = (cell: Cell, value: any) => {
+    // if (cell.isClicked) return;
+
+    if (value !== EIcons.FLAG) {
       cell.isClicked = true;
-      // removeAndAddClass(cellElement, 'unClicked', 'clicked');
     }
-    // updateCellHtmlContent(cellElement, value);
+    const currCell = gameBoard[cell.xCoord][cell.yCoord];
+    console.log('value in  render: ', value);
+    currCell.value = value;
+    // setGameBoard({ type: 'updateCell', cell: currCell });
+    setGameBoard(prevBoard => {
+      prevBoard[cell.xCoord][cell.yCoord] = currCell;
+      return [...prevBoard];
+      // return prevBoard;
+    });
   };
 
-  useEffect(() => {
-    setGameBoard(createBoard);
-  }, [boardSize]);
   console.count('+ + +  board run + + +');
   return (
     <div className={classes.board}>
@@ -192,7 +287,9 @@ export const Board = memo(({ boardSize }: IProps) => {
                     isMine={cell.isMine}
                     isFlagged={cell.isFlagged}
                     isClicked={cell.isClicked}
+                    value={cell.value}
                     clickHandler={cellClickedHandler}
+                    cellReducer={cellReducer}
                   />
                 );
               })}
