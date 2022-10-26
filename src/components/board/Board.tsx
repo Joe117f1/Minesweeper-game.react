@@ -57,8 +57,19 @@ export const Board = memo(({ boardSize }: IProps) => {
         }
       }
     }
+    for (let i = 0; i < boardSize; i++) {
+      for (let j = 0; j < boardSize; j++) {
+        const currCell = board[i][j];
+        if (currCell.isMine) {
+          currCell.value = EIcons.EXPLOSION;
+        } else {
+          const v = assignValueOfNeigborMines(i, j, board);
+          currCell.value = v;
+        }
+      }
+    }
     return board;
-  }, []);
+  }, [boardSize]);
 
   const cellClickedHandler = (cell: ICell) => {
     try {
