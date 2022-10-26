@@ -11,7 +11,27 @@ interface IProps {
   boardSize: number;
 }
 
-const createCell = (x: number, y: number): ICell => {
+const assignValueOfNeigborMines = (
+  xCoord: number,
+  yCoord: number,
+  board: Board
+) => {
+  let minesCounter = 0;
+  for (let i = xCoord - 1; i <= xCoord + 1; i++) {
+    if (i < 0 || i >= board.length) continue;
+    for (let j = yCoord - 1; j <= yCoord + 1; j++) {
+      if (i === xCoord && j === yCoord) continue;
+      if (j < 0 || j >= board[i].length) continue;
+      const currCell = board[i][j];
+
+      if (currCell.isMine) minesCounter++;
+    }
+  }
+  // if (request === ECellsActions.COUNT_MINES) {
+  //   return minesCounter;
+  // }
+  return minesCounter;
+};
   return {
     xCoord: x,
     yCoord: y,
