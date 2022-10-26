@@ -1,24 +1,13 @@
 import { useState, useEffect, useReducer, memo } from 'react';
-import { ICell } from '../../types/interfaces';
+import { Cell, CellState, EActions } from '../../types/interfaces';
 import { EIcons } from '../../types/enums';
 import classes from './BoardCell.module.css';
 
-enum EActions {
-  MINE = 'mine',
-  FLAGGED = 'flagged',
-  CLICKED = 'clicked',
+interface Props extends Cell {
+  clickHandler: (cell: Cell) => void;
 }
 
-interface ICellState {
-  isMine: boolean;
-  isFlagged: boolean;
-  isClicked: boolean;
-}
-interface IProps extends ICell {
-  clickHandler: (cell: ICell) => void;
-}
-
-const reducer = (state: ICellState, action: { type: EActions }) => {
+const reducer = (state: CellState, action: { type: EActions; id: string }) => {
   const actions = {
     clicked: { ...state, isClicked: true },
     flagged: { ...state, isFlagged: true },
@@ -26,34 +15,44 @@ const reducer = (state: ICellState, action: { type: EActions }) => {
     default: { ...state, isMine: false, isFlagged: false, isClicked: false }, //TODO: change to reset function
   };
 
-  // switch (action.type) {
-  //   case EActions.MINE:
-  //     return { ...state, isMine: true };
-  //   case EActions.FLAGGED:
-  //     return { ...state, isFlagged: true };
-  //   case EActions.CLICKED:
-  //     return { ...state, isClicked: true };
-  //   default:
-  //     return { ...state, isMine: false, isFlagged: false, isClicked: false }; //TODO: change to reset function
-  // }
   return actions[action.type];
 };
 
 export const BoardCell = memo(
-  ({ xCoord, yCoord, isMine, isFlagged, isClicked, clickHandler }: IProps) => {
-    const cellState = { isMine, isFlagged, isClicked };
+  ({
+    // id,
+    xCoord,
+    yCoord,
+    isMine,
+    isFlagged,
+    isClicked,
+    value,
+    clickHandler,
+    cellReducer,
+  }: Props) => {
+    // console.count('--- cell run --- ');
+    const cellState: CellState = {
+      isMine,
+      isFlagged,
+      isClicked,
+      value,
+      xCoord,
+      yCoord,
+    };
     const [cell, setCell] = useReducer(reducer, cellState);
     const [cellValue, setCellValue] = useState<EIcons | null>(null);
-    const isExploded = cell.isMine && cell.isClicked;
+    const [click, setClick] = useState(false);
+    // const isExploded = cell.isMine && cell.isClicked;
+    const isExploded = isMine && isClicked;
 
     const onClick = () => {
-      setCell({ type: EActions.CLICKED });
-      clickHandler({ ...cell, xCoord, yCoord });
+      setCell({ type: EActions.CLICKED, id: `${xCoord}-${yCoord}` });
+      clickHandler({ ...cellState, xCoord, yCoord });
     };
 
     useEffect(() => {
-      let cellValue = null;
-      const { isFlagged, isMine } = cell;
+      let cellValue = value;
+      const { isFlagged, isMine } = cellState;
       if (isFlagged) {
         cellValue = EIcons.FLAG;
       } else if (isExploded) {
@@ -63,14 +62,16 @@ export const BoardCell = memo(
         cellValue = EIcons.MINE;
       }
       setCellValue(cellValue);
-    }, [cell]);
+    }, [cellState, cellValue]);
 
     return (
       <td
         className={cell.isClicked ? classes.clicked : classes.unClicked}
+        // className={click ? classes.clicked : classes.unClicked}
         onClick={onClick}
       >
-        {cellValue}
+        {cellValue === EIcons.FLAG ? cellValue : (cell.isClicked && cellValue)}
+        {/* {cellValue === EIcons.FLAG ? cellValue : click && cellValue} */}
       </td>
     );
   }
