@@ -71,12 +71,17 @@ const cellReducer = (
 
   return actions[action.type];
 };
+
+const createCell = (x: number, y: number): Cell => {
   return {
+    id: `${x}-${y}`,
     xCoord: x,
     yCoord: y,
     isMine: false,
     isFlagged: false,
     isClicked: false,
+    value: null,
+    cellReducer,
   };
 };
 
