@@ -32,6 +32,45 @@ const assignValueOfNeigborMines = (
   // }
   return minesCounter;
 };
+
+const boardReducer = (
+  state: Board,
+  action: { type: string; board?: Board; cell?: Cell }
+) => {
+  // let newBoard;
+  if (action.cell) {
+    // console.log('cell in reducer: ', action.cell);
+
+    // const newBoardHelper = state;
+    // newBoardHelper[action.cell.xCoord][action.cell.yCoord] = action.cell;
+    // newBoard = newBoardHelper;
+    state[action.cell.xCoord][action.cell.yCoord] = action.cell;
+  }
+  const actions = {
+    updateCell: action.cell && [...state], //state,
+    board: action.board && [...action.board],
+    default: null, //TODO: change to reset function
+  };
+
+  //@ts-ignore
+  return actions[action.type] as Board;
+};
+
+const cellReducer = (
+  state: CellState,
+  action: { type: EActions; id: string }
+) => {
+  console.count('reducer run');
+  if (state.id !== action.id) return state;
+  const actions = {
+    clicked: { ...state, isClicked: true },
+    flagged: { ...state, isFlagged: true },
+    mine: { ...state, isMine: true },
+    default: { ...state, isMine: false, isFlagged: false, isClicked: false }, //TODO: change to reset function
+  };
+
+  return actions[action.type];
+};
   return {
     xCoord: x,
     yCoord: y,
