@@ -1,10 +1,11 @@
-import { useState, useEffect, useReducer, memo } from 'react';
+import { useState, useEffect, useReducer, memo, MouseEvent } from 'react';
 import { Cell, CellState, EActions } from '../../types/interfaces';
 import { EIcons } from '../../types/enums';
 import classes from './BoardCell.module.css';
 
 interface Props extends Cell {
   clickHandler: (cell: Cell) => void;
+  flaggedCell: (ev: MouseEvent, cell: Cell) => void;
 }
 
 const reducer = (state: CellState, action: { type: EActions; id: string }) => {
@@ -29,6 +30,7 @@ export const BoardCell = memo(
     value,
     clickHandler,
     cellReducer,
+    flaggedCell,
   }: Props) => {
     // console.count('--- cell run --- ');
     const cellState: CellState = {
@@ -67,11 +69,10 @@ export const BoardCell = memo(
     return (
       <td
         className={cell.isClicked ? classes.clicked : classes.unClicked}
-        // className={click ? classes.clicked : classes.unClicked}
         onClick={onClick}
+        onContextMenu={v => flaggedCell(v, cell)}
       >
-        {cellValue === EIcons.FLAG ? cellValue : (cell.isClicked && cellValue)}
-        {/* {cellValue === EIcons.FLAG ? cellValue : click && cellValue} */}
+        {cellValue === EIcons.FLAG ? cellValue : cell.isClicked && cellValue}
       </td>
     );
   }

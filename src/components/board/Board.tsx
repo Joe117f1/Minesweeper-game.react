@@ -270,31 +270,32 @@ export const Board = memo(({ boardSize }: IProps) => {
     });
   };
 
+  const flaggedCell = (ev:MouseEvent, cell: Cell) => {
+    console.log('cell: ', cell)
+    ev.preventDefault();
+    if (cell.isClicked) return;
+    if (!isGameActive) return;
+    // startGame();
+    let cellCover;
+
+    if (!cell.isFlagged) {
+      cell.isFlagged = true;
+      cellCover = EIcons.FLAG;
+      console.log('FLAGGED!');
+    } else {
+      console.log('FLAGGED DISABLED!');
+      cell.isFlagged = false;
+      cellCover = null;
+    }
+    // renderCell(i, j, cellCover);
+    // checkForWin(gBoard);
+  };
   console.count('+ + +  board run + + +');
   return (
     <div className={classes.board}>
       <table>
         <tbody>
-          {gameBoard.map((row, idx) => (
-            <tr key={`${idx}-${Math.random().toString()}`}>
-              {row.map((cell, idx) => {
-                const { xCoord: x, yCoord: y } = cell;
-                return (
-                  <BoardCell
-                    key={`${idx}-${x}-${y}`}
-                    xCoord={x}
-                    yCoord={y}
-                    isMine={cell.isMine}
-                    isFlagged={cell.isFlagged}
-                    isClicked={cell.isClicked}
-                    value={cell.value}
-                    clickHandler={cellClickedHandler}
-                    cellReducer={cellReducer}
-                  />
-                );
-              })}
-            </tr>
-          ))}
+                      flaggedCell={flaggedCell}
         </tbody>
       </table>
     </div>
