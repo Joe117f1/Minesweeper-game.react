@@ -6,6 +6,7 @@ import {
   memo,
   useRef,
   ReactNode,
+  MouseEvent
 } from 'react';
 import { BoardCell } from './BoardCell';
 import { Cell, CellState, EActions } from '../../types/interfaces';
@@ -295,7 +296,29 @@ export const Board = memo(({ boardSize }: IProps) => {
     <div className={classes.board}>
       <table>
         <tbody>
+          {gameBoard.map((row, idx) => {
+            return (
+              <tr key={`${idx}-${Math.random().toString()}`}>
+                {row.map((cell, idx) => {
+                  const { xCoord: x, yCoord: y } = cell;
+                  return (
+                    <BoardCell
+                      key={`${idx}-${x}-${y}`}
+                      xCoord={x}
+                      yCoord={y}
+                      isMine={cell.isMine}
+                      isFlagged={cell.isFlagged}
+                      isClicked={cell.isClicked}
+                      value={cell.value}
+                      clickHandler={cellClickedHandler}
+                      cellReducer={cellReducer}
                       flaggedCell={flaggedCell}
+                    />
+                  );
+                })}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
